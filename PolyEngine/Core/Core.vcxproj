@@ -133,6 +133,7 @@
     <ClCompile Include="Src\AARect.cpp" />
     <ClCompile Include="Src\BaseObject.cpp" />
     <ClCompile Include="Src\BinaryBuffer.cpp" />
+    <ClCompile Include="Src\BitMask.cpp" />
     <ClCompile Include="Src\Color.cpp" />
     <ClCompile Include="Src\CorePCH.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -161,6 +162,7 @@
     <ClInclude Include="Src\AARect.hpp" />
     <ClInclude Include="Src\Allocator.hpp" />
     <ClInclude Include="Src\Angle.hpp" />
+    <ClInclude Include="Src\BitMask.hpp" />
     <ClInclude Include="Src\BTreePrimitives.hpp" />
     <ClInclude Include="Src\LibraryLoader.hpp" />
     <ClInclude Include="Src\OrderedMap.hpp" />
