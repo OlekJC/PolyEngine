@@ -15,6 +15,8 @@ TEST_CASE("Toggle and check", "[BitMask]")
 	REQUIRE(a == b);
 	for (size_t i = 0; i < 23; i++) //max i==24 not 23??
 		REQUIRE(a[i] == false);
+	a.Set(0, true);
+	REQUIRE(a[0] == true);
 	REQUIRE(a[12] == false);
 	a.Set(12, true);
 	REQUIRE(a[12] == true);

@@ -31,7 +31,7 @@ namespace Poly {
 		bool Set(int index, bool state);			//DONE
 		bool Reset();								//Done, i think?
 		bool Toggle(int index);						//DONE
-
+		
 		bool Resize(int offset = 0);
 		size_t GetSize() { return BitsNumber; }
 		//////////////////////////////////////////////

@@ -173,7 +173,26 @@ bool BitMask::Resize(int offset)
 {
 	if (offset > 0)
 	{
-		BitsNumber += offset;
+		if (BitsNumber + offset < Size*CHAR_BIT)
+		{
+			BitsNumber += offset;
+			return true;
+		}
+		else if (BitsNumber + offset > Size*CHAR_BIT)
+		{
+			BitsNumber += offset;
+			int times = (offset + BitsNumber - Size*CHAR_BIT) / CHAR_BIT + 1;
+			for (int i = 0; i < times; i++)
+				BitList.PushBack(0UL);
+			Size += times;
+			return true;
+		}
+		//Czy BitsNumber+offset < Size*CHAR_BIT
+		//Jesli tak to tylko BitsNumber+=offset;
+		//Jesli nie to bitsnumber+=offset i BitList.pusback(0) tyle razy ile trzeba czyli 
+		//offset/char_bit
+		//BitsNumber += offset;
+		/*
 		int limit = 0;
 		if (offset%CHAR_BIT)
 			limit = offset / CHAR_BIT + 1;
@@ -183,9 +202,11 @@ bool BitMask::Resize(int offset)
 			BitList.PushBack(0UL);
 		Size += limit;
 		return true;
+		*/
 	}
 	if (offset < 0)
 	{
+		/*
 		///Nie tak szybko!
 		BitsNumber -= offset;
 		int limit = 0;
@@ -199,8 +220,10 @@ bool BitMask::Resize(int offset)
 
 		Size -= limit;
 		return true;
+		*/
 	}
 	return false;
+	
 }
 
 size_t BitMask::BitListIndex(size_t index)
