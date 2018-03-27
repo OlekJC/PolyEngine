@@ -2,6 +2,8 @@
 
 #include <climits>
 
+#define ZERO 0UL
+
 using namespace Poly;
 
 BitMask::BitMask(size_t size)
@@ -15,7 +17,7 @@ BitMask::BitMask(size_t size)
 		arrSize = size / CHAR_BIT;
 	Size = arrSize;
 	for (int i = 0; i < Size;i++)
-		BitList.PushBack(0UL);
+		BitList.PushBack(ZERO);
 	//BitList = Dynarray<DataType>(arrSize);
 	//BitList = Dynarray<DataType>(5);
 	//for (auto x : BitList)
@@ -85,7 +87,7 @@ BitMask BitMask::operator|(const BitMask rhs) const
 		for (size_t i = 0; i < rhs.Size; i++)
 			temp.BitList[i] = BitList[i] | rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			temp.BitList[i] = BitList[i] | 0UL;
+			temp.BitList[i] = BitList[i] | ZERO;
 		return temp;
 	}
 	else if (Size < rhs.Size)
@@ -94,7 +96,7 @@ BitMask BitMask::operator|(const BitMask rhs) const
 		for (size_t i = 0; i < Size; i++)
 			temp.BitList[i] = BitList[i] | rhs.BitList[i];
 		for (size_t i = Size; i < rhs.Size; i++)
-			temp.BitList[i] = rhs.BitList[i] | 0UL;
+			temp.BitList[i] = rhs.BitList[i] | ZERO;
 		return temp;
 	}
 	return BitMask(0);
@@ -115,7 +117,7 @@ BitMask BitMask::operator^(const BitMask rhs) const
 		for (size_t i = 0; i < rhs.Size; i++)
 			temp.BitList[i] = BitList[i] ^ rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			temp.BitList[i] = BitList[i] ^ 0UL;
+			temp.BitList[i] = BitList[i] ^ ZERO;
 		return temp;
 	}
 	else if (Size < rhs.Size)
@@ -124,7 +126,7 @@ BitMask BitMask::operator^(const BitMask rhs) const
 		for (size_t i = 0; i < Size; i++)
 			temp.BitList[i] = BitList[i] ^ rhs.BitList[i];
 		for (size_t i = Size; i < rhs.Size; i++)
-			temp.BitList[i] = rhs.BitList[i] ^ 0UL;
+			temp.BitList[i] = rhs.BitList[i] ^ ZERO;
 		return temp;
 	}
 	return BitMask(0);
@@ -145,7 +147,7 @@ BitMask BitMask::operator&(const BitMask rhs) const
 		for (size_t i = 0; i < rhs.Size; i++)
 			temp.BitList[i] = BitList[i] & rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			temp.BitList[i] = BitList[i] & 0UL;
+			temp.BitList[i] = BitList[i] & ZERO;
 		return temp;
 	}
 	else if (Size < rhs.Size)
@@ -154,7 +156,7 @@ BitMask BitMask::operator&(const BitMask rhs) const
 		for (size_t i = 0; i < Size; i++)
 			temp.BitList[i] = BitList[i] & rhs.BitList[i];
 		for (size_t i = Size; i < rhs.Size; i++)
-			temp.BitList[i] = rhs.BitList[i] & 0UL;
+			temp.BitList[i] = rhs.BitList[i] & ZERO;
 		return temp;
 	}
 	return BitMask(0);
@@ -176,17 +178,17 @@ bool BitMask::Resize(int offset)
 		if (BitsNumber + offset < Size*CHAR_BIT)
 		{
 			BitsNumber += offset;
-			return true;
 		}
 		else if (BitsNumber + offset > Size*CHAR_BIT)
 		{
 			BitsNumber += offset;
-			int times = (offset + BitsNumber - Size*CHAR_BIT) / CHAR_BIT + 1;
-			for (int i = 0; i < times; i++)
-				BitList.PushBack(0UL);
+			//int times = (offset + BitsNumber - Size*CHAR_BIT) / CHAR_BIT + 1;
+			size_t times = (((offset + BitsNumber) - Size*CHAR_BIT) / CHAR_BIT) + 1;
+			for (size_t i = 0; i < times; i++)
+				BitList.PushBack(ZERO);
 			Size += times;
-			return true;
 		}
+		return true;
 		//Czy BitsNumber+offset < Size*CHAR_BIT
 		//Jesli tak to tylko BitsNumber+=offset;
 		//Jesli nie to bitsnumber+=offset i BitList.pusback(0) tyle razy ile trzeba czyli 
@@ -206,6 +208,20 @@ bool BitMask::Resize(int offset)
 	}
 	if (offset < 0)
 	{
+		if (BitsNumber + offset > (Size - 1)*CHAR_BIT)
+		{
+			BitsNumber += offset;
+		}
+		else if (BitsNumber + offset < (Size - 1)*CHAR_BIT)
+		{
+			//int times = (offset + BitsNumber - (Size-1)*CHAR_BIT) / CHAR_BIT + 1;
+			size_t times = ((Size - 1)*CHAR_BIT - (offset + BitsNumber)) / CHAR_BIT + 1;
+			for (size_t i = 0; i < times; i++)
+				BitList.PopBack();
+			Size -= times;
+			BitsNumber += offset;
+		}
+		return true;
 		/*
 		///Nie tak szybko!
 		BitsNumber -= offset;
@@ -222,8 +238,8 @@ bool BitMask::Resize(int offset)
 		return true;
 		*/
 	}
-	return false;
-	
+	else
+		return false;
 }
 
 size_t BitMask::BitListIndex(size_t index)
@@ -247,23 +263,23 @@ BitMask& BitMask::operator|=(const BitMask rhs)
 		for (size_t i = 0; i < rhs.Size; i++)
 			BitList[i] |= rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			BitList[i] |= 0UL;
+			BitList[i] |= ZERO;
 		return *this;
 	}
 	else if (Size < rhs.Size)
 	{
 		for (size_t i = 0; i < Size; i++)
 			BitList[i] |= rhs.BitList[i];
-		size_t offset = 0;
+		//size_t offset = 0;
 		for (size_t i = 0; i < rhs.Size - Size; i++)
 		{
-			BitList.PushBack(0UL);
-			offset++;
+			BitList.PushBack(ZERO);
+			//offset+=CHAR_BIT;
 		}
 		for (size_t i = Size; i < rhs.Size; i++)
-			BitList[i] |= 0UL;
+			BitList[i] |= ZERO;
 		//Update of data quantity info changed in code above
-		Size += offset;
+		Size += rhs.Size;
 		BitsNumber = rhs.BitsNumber - BitsNumber;
 		return *this;
 	}
@@ -283,7 +299,7 @@ BitMask& BitMask::operator^=(const BitMask rhs)
 		for (size_t i = 0; i < rhs.Size; i++)
 			BitList[i] ^= rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			BitList[i] ^= 0UL;
+			BitList[i] ^= ZERO;
 		return *this;
 	}
 	else if (Size < rhs.Size)
@@ -293,11 +309,11 @@ BitMask& BitMask::operator^=(const BitMask rhs)
 		size_t offset = 0;
 		for (size_t i = 0; i < rhs.Size - Size; i++)
 		{
-			BitList.PushBack(0UL);
-			offset++;
+			BitList.PushBack(ZERO);
+			offset+=CHAR_BIT;
 		}
 		for (size_t i = Size; i < rhs.Size; i++)
-			BitList[i] ^= 0UL;
+			BitList[i] ^= ZERO;
 		//Update of data quantity info changed in code above
 		Size += offset;
 		BitsNumber = rhs.BitsNumber - BitsNumber;
@@ -319,7 +335,7 @@ BitMask& BitMask::operator&=(const BitMask rhs)
 		for (size_t i = 0; i < rhs.Size; i++)
 			BitList[i] &= rhs.BitList[i];
 		for (size_t i = rhs.Size; i < Size; i++)
-			BitList[i] &= 0UL;
+			BitList[i] &= ZERO;
 		return *this;
 	}
 	else if (Size < rhs.Size)
@@ -329,11 +345,11 @@ BitMask& BitMask::operator&=(const BitMask rhs)
 		size_t offset = 0;
 		for (size_t i = 0; i < rhs.Size - Size; i++)
 		{
-			BitList.PushBack(0UL);
-			offset++;
+			BitList.PushBack(ZERO);
+			offset+=CHAR_BIT;
 		}
 		for (size_t i = Size; i < rhs.Size; i++)
-			BitList[i] &= 0UL;
+			BitList[i] &= ZERO;
 		//Update of data quantity info changed in code above
 		Size += offset;
 		BitsNumber = rhs.BitsNumber - BitsNumber;
@@ -344,7 +360,7 @@ BitMask& BitMask::operator&=(const BitMask rhs)
 
 bool BitMask::operator==(const BitMask rhs) const
 {
-	if (Size > rhs.Size || Size < rhs.Size)
+	if (Size!=rhs.Size)
 		return false;
 
 	if (Size == rhs.Size)

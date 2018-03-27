@@ -11,9 +11,9 @@ namespace Poly {
 		BitMask(size_t size = sizeof(DataType));//Done
 
 		//Overloading logical operators
-		BitMask operator|(const BitMask rhs) const;	//Implemented, not tested
-		BitMask operator^(const BitMask rhs) const;	//Implemented, not tested
-		BitMask operator&(const BitMask rhs) const;	//Implemented, not tested
+		BitMask operator|(const BitMask rhs) const;	//Tested
+		BitMask operator^(const BitMask rhs) const;	//Tested
+		BitMask operator&(const BitMask rhs) const;	//Tested
 		BitMask& operator~();						//Implemented, not tested
 		/////////////////////////////////////////////////
 		BitMask& operator|=(const BitMask rhs);		
@@ -32,11 +32,11 @@ namespace Poly {
 		bool Reset();								//Done, i think?
 		bool Toggle(int index);						//DONE
 		
-		bool Resize(int offset = 0);
+		bool Resize(int offset = 0);				//DONE, not tested
 		size_t GetSize() { return BitsNumber; }
 		//////////////////////////////////////////////
-		size_t GetSize2() { return Size; }
-		size_t DASize() { return BitList.GetSize(); }
+		//size_t GetArraySize() { return Size; }
+		size_t GetArraySize2() { return BitList.GetSize(); }
 		//////////////////////////////////////////////
 	private:
 		inline bool RangeCheck(int index);
