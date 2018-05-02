@@ -1,63 +1,56 @@
 #include "CorePCH.hpp"
 
 #include <climits>
+//#include <cmath>
 
-#define ZERO 0UL
+constexpr u64 ZERO = 0UL;
 
 using namespace Poly;
+
+constexpr BitMask::DataType TYPE_SIZE = CHAR_BIT * sizeof(BitMask::DataType);
 
 BitMask::BitMask(size_t size)
 	: BitsNumber(size)
 {
-	size_t arrSize = 0;
+	size_t arraySize = 0;
 	
 	if (size%CHAR_BIT)
-		arrSize = size / CHAR_BIT + 1;
+		arraySize = size / CHAR_BIT + 1;
 	else 
-		arrSize = size / CHAR_BIT;
-	Size = arrSize;
-	for (int i = 0; i < Size;i++)
+		arraySize = size / CHAR_BIT;
+
+	for (int i = 0; i < arraySize;i++)
 		BitList.PushBack(ZERO);
-	//BitList = Dynarray<DataType>(arrSize);
-	//BitList = Dynarray<DataType>(5);
-	//for (auto x : BitList)
-		//x = 0UL;
 }
 
 bool BitMask::Reset()
 {
 	BitList.Clear();
-	Size = 0;
 	BitsNumber = 0;
 	return true;
 }
 
-bool BitMask::Toggle(int index)
+bool BitMask::Toggle(size_t index)
 {
-	if (RangeCheck(index))
-		return false;
-	size_t bitListIndex = 0;
-	bitListIndex = BitListIndex(index);
-	BitList[bitListIndex] ^= 1UL << index%CHAR_BIT;
+	HEAVY_ASSERTE(RangeCheck(index), "Out of bounds");
+	BitList[index/CHAR_BIT] ^= 1UL << index%CHAR_BIT;
 	return true;
 }
 
-bool BitMask::operator[](size_t index)
+bool BitMask::operator[](size_t index) const
 {
-	size_t bitListIndex = 0;
-	bitListIndex = BitListIndex(index);
-	DataType tempChar = BitList[bitListIndex];
+	DataType tempChar = BitList[index/CHAR_BIT];
 	tempChar = (tempChar >> index%CHAR_BIT) & 1UL;
 	return tempChar != 0;
 }
 
-bool BitMask::Set(int index, bool state)
+bool BitMask::Set(size_t index, bool state)
 {
-	if (RangeCheck(index))
-		return false;
-	size_t bitListIndex = BitListIndex(index);
-	size_t bitPosition = index%CHAR_BIT;
-	DataType bit = BitList[bitListIndex];
+	HEAVY_ASSERTE(RangeCheck(index), "Out of bounds");
+	//size_t bitListIndex = BitListIndex(index);
+	size_t bitListIndex	= index / CHAR_BIT;
+	size_t bitPosition	= index % CHAR_BIT;
+	//DataType bit = BitList[index / CHAR_BIT];
 	if (state)
 		BitList[bitListIndex] |= (1UL << bitPosition);
 	else
@@ -65,97 +58,121 @@ bool BitMask::Set(int index, bool state)
 	return true;
 }
 
-bool BitMask::RangeCheck(int index)
+bool BitMask::RangeCheck(size_t index)
 {
 	if (index >= BitsNumber || index < 0)
-		return true;
-	return false;
+		return false;
+	return true;
 }
 
-BitMask BitMask::operator|(const BitMask rhs) const
+BitMask BitMask::operator|(const BitMask& rhs) const
 {
-	if (Size == rhs.Size)
+	//Equal Dynarray sizes
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		size_t tempBitsNumber = 0;
+		if (BitsNumber > rhs.BitsNumber)
+			tempBitsNumber = BitsNumber;
+		else
+			tempBitsNumber = rhs.BitsNumber;
+
+		BitMask temp(tempBitsNumber);
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] | rhs.BitList[i];
 		return temp;
 	}
-	else if (Size > rhs.Size)
+	//Lhs size bigger than rhs size
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
 		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] | rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] | ZERO;
 		return temp;
 	}
-	else if (Size < rhs.Size)
+	//Rhs size bigger than lhs size
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
 		BitMask temp(rhs.BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] | rhs.BitList[i];
-		for (size_t i = Size; i < rhs.Size; i++)
+		for (size_t i = BitList.GetSize(); i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = rhs.BitList[i] | ZERO;
 		return temp;
 	}
 	return BitMask(0);
 }
 
-BitMask BitMask::operator^(const BitMask rhs) const
+BitMask BitMask::operator^(const BitMask& rhs) const
 {
-	if (Size == rhs.Size)
+	//Equal BitMasks sizes
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		size_t tempBitsNumber = 0;
+		if (BitsNumber > rhs.BitsNumber)
+			tempBitsNumber = BitsNumber;
+		else
+			tempBitsNumber = rhs.BitsNumber;
+
+		BitMask temp(tempBitsNumber);
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] ^ rhs.BitList[i];
 		return temp;
 	}
-	else if (Size > rhs.Size)
+	//Lhs size bigger than rhs size
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
 		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] ^ rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] ^ ZERO;
 		return temp;
 	}
-	else if (Size < rhs.Size)
+	//rhs size bigger than lhs size
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
 		BitMask temp(rhs.BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] ^ rhs.BitList[i];
-		for (size_t i = Size; i < rhs.Size; i++)
+		for (size_t i = BitList.GetSize(); i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = rhs.BitList[i] ^ ZERO;
 		return temp;
 	}
 	return BitMask(0);
 }
 
-BitMask BitMask::operator&(const BitMask rhs) const
+BitMask BitMask::operator&(const BitMask& rhs) const
 {
-	if (Size == rhs.Size)
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		size_t tempBitsNumber = 0;
+		if (BitsNumber > rhs.BitsNumber)
+			tempBitsNumber = BitsNumber;
+		else
+			tempBitsNumber = rhs.BitsNumber;
+
+		BitMask temp(tempBitsNumber);
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] & rhs.BitList[i];
 		return temp;
 	}
-	else if (Size > rhs.Size)
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
 		BitMask temp(BitsNumber);
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] & rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] & ZERO;
 		return temp;
 	}
-	else if (Size < rhs.Size)
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
 		BitMask temp(rhs.BitsNumber);
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			temp.BitList[i] = BitList[i] & rhs.BitList[i];
-		for (size_t i = Size; i < rhs.Size; i++)
+		for (size_t i = BitList.GetSize(); i < rhs.BitList.GetSize(); i++)
 			temp.BitList[i] = rhs.BitList[i] & ZERO;
 		return temp;
 	}
@@ -171,188 +188,188 @@ BitMask& BitMask::operator~()
 }
 
 
-bool BitMask::Resize(int offset) 
+bool BitMask::Resize(const int offset)
 {
 	if (offset > 0)
 	{
-		if (BitsNumber + offset < Size*CHAR_BIT)
+		HEAVY_ASSERTE(BitsNumber + offset < ULLONG_MAX, "Out of size_t range"); //Czy to ma sens?
+		if (BitsNumber + offset <= GetDynarraySize()*CHAR_BIT)
 		{
 			BitsNumber += offset;
+			return true;
 		}
-		else if (BitsNumber + offset > Size*CHAR_BIT)
-		{
-			BitsNumber += offset;
-			//int times = (offset + BitsNumber - Size*CHAR_BIT) / CHAR_BIT + 1;
-			size_t times = (((offset + BitsNumber) - Size*CHAR_BIT) / CHAR_BIT) + 1;
-			for (size_t i = 0; i < times; i++)
-				BitList.PushBack(ZERO);
-			Size += times;
-		}
-		return true;
-		//Czy BitsNumber+offset < Size*CHAR_BIT
-		//Jesli tak to tylko BitsNumber+=offset;
-		//Jesli nie to bitsnumber+=offset i BitList.pusback(0) tyle razy ile trzeba czyli 
-		//offset/char_bit
-		//BitsNumber += offset;
-		/*
-		int limit = 0;
-		if (offset%CHAR_BIT)
-			limit = offset / CHAR_BIT + 1;
 		else
-			limit = offset / CHAR_BIT;
-		for (size_t i = 0; i < limit; i++)
-			BitList.PushBack(0UL);
-		Size += limit;
-		return true;
-		*/
+		{
+			size_t x = BitList.GetSize()*CHAR_BIT;
+			size_t y = x-BitsNumber;
+			size_t z = offset - static_cast<int>(y);
+			size_t pushBackCount = z / CHAR_BIT;
+			if (z%CHAR_BIT)
+				pushBackCount++;
+			for (size_t i = 0; i < pushBackCount; i++)
+				BitList.PushBack(ZERO);
+			
+			BitsNumber += offset;
+			return true;
+		}
 	}
+	
 	if (offset < 0)
 	{
-		if (BitsNumber + offset > (Size - 1)*CHAR_BIT)
+		HEAVY_ASSERTE(BitsNumber+offset>=0, "Out of bounds");
+		if (BitsNumber + offset > (GetDynarraySize()-1)*CHAR_BIT)
 		{
 			BitsNumber += offset;
+			return true;
 		}
-		else if (BitsNumber + offset < (Size - 1)*CHAR_BIT)
-		{
-			//int times = (offset + BitsNumber - (Size-1)*CHAR_BIT) / CHAR_BIT + 1;
-			size_t times = ((Size - 1)*CHAR_BIT - (offset + BitsNumber)) / CHAR_BIT + 1;
-			for (size_t i = 0; i < times; i++)
-				BitList.PopBack();
-			Size -= times;
-			BitsNumber += offset;
-		}
-		return true;
-		/*
-		///Nie tak szybko!
-		BitsNumber -= offset;
-		int limit = 0;
-		if (offset%CHAR_BIT)
-			limit = offset / CHAR_BIT + 1;
 		else
-			limit = offset / CHAR_BIT;
+		{
+			size_t currentSize = BitList.GetSize();
+			size_t targetSize = 0;
+			if (-1*(BitsNumber+offset) % CHAR_BIT)
+				targetSize = (BitsNumber + offset) / CHAR_BIT+1;
+			else
+				targetSize = (BitsNumber + offset) / CHAR_BIT;
+			
+			size_t popBackCount = currentSize - targetSize;
+			for (size_t i = 0; i < popBackCount; i++)
+				BitList.PopBack();
 
-		for (size_t i = 0; i < limit; i++)
-			BitList.PopBack();
-
-		Size -= limit;
-		return true;
-		*/
+			BitsNumber += offset;
+			return true;
+		}
 	}
-	else
+	
+	
+	if (offset == 0)
+	{
 		return false;
+	}
+	return false;
 }
 
 size_t BitMask::BitListIndex(size_t index)
 {
-	if (index%CHAR_BIT)
-		return index / CHAR_BIT;
-	else
 		return index / CHAR_BIT;
 }
 
-BitMask& BitMask::operator|=(const BitMask rhs)
+BitMask& BitMask::operator|=(const BitMask& rhs)
 {
-	if (Size == rhs.Size)
+	//Equal Dynarray sizes
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] |= rhs.BitList[i];
+
+		if (rhs.BitsNumber > BitsNumber)
+			BitsNumber = rhs.BitsNumber;
+
 		return *this;
 	}
-	else if (Size > rhs.Size)
+	//Lhs size bigger than rhs size
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			BitList[i] |= rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
 			BitList[i] |= ZERO;
 		return *this;
 	}
-	else if (Size < rhs.Size)
+	//Rhs size bigger than lhs size
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] |= rhs.BitList[i];
-		//size_t offset = 0;
-		for (size_t i = 0; i < rhs.Size - Size; i++)
-		{
+		
+		size_t oldBitListSize = BitList.GetSize();
+
+		for (size_t i = 0; i < rhs.BitList.GetSize() - oldBitListSize; i++)
 			BitList.PushBack(ZERO);
-			//offset+=CHAR_BIT;
-		}
-		for (size_t i = Size; i < rhs.Size; i++)
+			
+		for (size_t i = oldBitListSize; i < BitList.GetSize(); i++)
 			BitList[i] |= ZERO;
-		//Update of data quantity info changed in code above
-		Size += rhs.Size;
-		BitsNumber = rhs.BitsNumber - BitsNumber;
+
+		BitsNumber = rhs.BitsNumber;
 		return *this;
 	}
 	return *this;
 }
 
-BitMask& BitMask::operator^=(const BitMask rhs)
+BitMask& BitMask::operator^=(const BitMask& rhs)
 {
-	if (Size == rhs.Size)
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] ^= rhs.BitList[i];
+
+		//Przypisac BitsNumbery
+		if (rhs.BitsNumber > BitsNumber)
+			BitsNumber = rhs.BitsNumber;
+
 		return *this;
 	}
-	else if (Size > rhs.Size)
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			BitList[i] ^= rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
-			BitList[i] ^= ZERO;
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
+			BitList[i] = rhs.BitList[i];	//BitList[i] will always be equal to rhs.BitList[i]
 		return *this;
 	}
-	else if (Size < rhs.Size)
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] ^= rhs.BitList[i];
-		size_t offset = 0;
-		for (size_t i = 0; i < rhs.Size - Size; i++)
-		{
+
+		size_t oldBitListSize = BitList.GetSize();
+
+		for (size_t i = 0; i < rhs.BitList.GetSize() - BitList.GetSize(); i++)
 			BitList.PushBack(ZERO);
-			offset+=CHAR_BIT;
-		}
-		for (size_t i = Size; i < rhs.Size; i++)
+
+		for (size_t i = oldBitListSize; i < BitList.GetSize(); i++)
 			BitList[i] ^= ZERO;
-		//Update of data quantity info changed in code above
-		Size += offset;
-		BitsNumber = rhs.BitsNumber - BitsNumber;
+
+		BitsNumber = rhs.BitsNumber;
 		return *this;
 	}
 	return *this;
 }
 
-BitMask& BitMask::operator&=(const BitMask rhs)
+BitMask& BitMask::operator&=(const BitMask& rhs)
 {
-	if (Size == rhs.Size)
+	if (BitList.GetSize() == rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] &= rhs.BitList[i];
+
+		if (rhs.BitsNumber > BitsNumber)
+			BitsNumber = rhs.BitsNumber;
+
 		return *this;
 	}
-	else if (Size > rhs.Size)
+	else if (BitList.GetSize() > rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < rhs.Size; i++)
+		for (size_t i = 0; i < rhs.BitList.GetSize(); i++)
 			BitList[i] &= rhs.BitList[i];
-		for (size_t i = rhs.Size; i < Size; i++)
+		for (size_t i = rhs.BitList.GetSize(); i < BitList.GetSize(); i++)
 			BitList[i] &= ZERO;
 		return *this;
 	}
-	else if (Size < rhs.Size)
+	else if (BitList.GetSize() < rhs.BitList.GetSize())
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			BitList[i] &= rhs.BitList[i];
-		size_t offset = 0;
-		for (size_t i = 0; i < rhs.Size - Size; i++)
-		{
+		
+		size_t oldBitListSize = BitList.GetSize();
+
+		for (size_t i = 0; i < rhs.BitList.GetSize() - BitList.GetSize(); i++)
 			BitList.PushBack(ZERO);
-			offset+=CHAR_BIT;
-		}
-		for (size_t i = Size; i < rhs.Size; i++)
+
+		for (size_t i = oldBitListSize; i < BitList.GetSize(); i++)
 			BitList[i] &= ZERO;
 		//Update of data quantity info changed in code above
-		Size += offset;
-		BitsNumber = rhs.BitsNumber - BitsNumber;
+		//BitList.GetSize() = rhs.BitList.GetSize();
+		BitsNumber = rhs.BitsNumber;
 		return *this;
 	}
 	return *this;
@@ -360,12 +377,12 @@ BitMask& BitMask::operator&=(const BitMask rhs)
 
 bool BitMask::operator==(const BitMask rhs) const
 {
-	if (Size!=rhs.Size)
+	if (BitsNumber!=rhs.BitsNumber)
 		return false;
 
-	if (Size == rhs.Size)
+	if (BitsNumber == rhs.BitsNumber)
 	{
-		for (size_t i = 0; i < Size; i++)
+		for (size_t i = 0; i < BitList.GetSize(); i++)
 			if (BitList[i] != rhs.BitList[i])
 				return false;
 		return true;
