@@ -246,101 +246,165 @@ TEST_CASE("Bitwise assignment operators", "[BitMask]")
 		}
 		SECTION("Different Dynarray sizes")
 		{
-			BitMask a(7), b(26);
-			a.Toggle(0); a.Toggle(2); a.Toggle(4); a.Toggle(6);
-			b.Toggle(0); b.Toggle(3); b.Toggle(15); b.Toggle(21);
-			BitMask *left, *right;
 			SECTION("Lhs size bigger than rhs size")
 			{
-				left = &b; right = &a;
-				*left |= *right;
-				CHECK(left->GetSize() == 26);
-				CHECK(left->GetDynarraySize() == 4);
-				for (size_t i = 0; i < left->GetSize(); i++)
-					if (i == 0 || i == 2 || i == 3 || i == 4 || i == 6 || i == 15 || i == 21)
-						CHECK((*left)[i] == true);
-					else
-						CHECK((*left)[i] == false);
-			}
-			SECTION("Lhs size bigger than rhs size")
-			{
-				left = &a; right = &b;
-				*left |= *right;
-				CHECK(left->GetSize() == 26);
-				CHECK(left->GetDynarraySize() == 4);
-				for (size_t i = 0; i < left->GetSize(); i++)
-					if (i == 0 || i == 2 || i == 3 || i == 4 || i == 6 || i == 15 || i == 21)
-						CHECK((*left)[i] == true);
-					else
-						CHECK((*left)[i] == false);
-			}
-		}
-		/*
-		BitMask a(9), b(20);
-		a.Toggle(2);	a.Toggle(3);	a.Toggle(7);
-		b.Toggle(4);	b.Toggle(10);	b.Toggle(14);
-		a |= b;
-		REQUIRE(a.GetSize() == b.GetSize());
-		for (size_t i = 0; i < a.GetSize(); i++)
-		{
-			if (i == 2 || i == 3 || i == 4 ||
-				i == 7 || i == 10 || i == 14)
-				CHECK(a[i] == true);
-			else
-				CHECK(a[i] == false);
-		}*/
-	}
+				BitMask a(7), b(26);
+				a.Toggle(0); a.Toggle(2); a.Toggle(4); a.Toggle(6);
+				b.Toggle(0); b.Toggle(3); b.Toggle(15); b.Toggle(21);
 
-	//Bitwise AND assignment operator
-	{
-		BitMask a(9), b(20);
-		a.Toggle(2);	a.Toggle(5);	a.Toggle(7);	a.Toggle(8);	a.Toggle(0);
-		b.Toggle(2);	b.Toggle(5);					b.Toggle(8);	b.Toggle(14);
-		a &= b;
-		REQUIRE(a.GetSize() == b.GetSize());
-		for (size_t i = 0; i < a.GetSize(); i++)
-		{
-			if (i==2 || i==5 || i==8)
-				CHECK(a[i] == true);
-			else
-				CHECK(a[i] == false);
+				b |= a;
+				CHECK(b.GetSize() == 26);
+				CHECK(b.GetDynarraySize() == 4);
+				for (size_t i = 0; i < b.GetSize(); i++)
+					if (i == 0 || i == 2 || i == 3 || i == 4 || i == 6 || i == 15 || i == 21)
+						CHECK(b[i] == true);
+					else
+						CHECK(b[i] == false);
+			}
+			
+			SECTION("Rhs size bigger than lhs size")
+			{
+				BitMask a(7), b(26);
+				a.Toggle(0); a.Toggle(2); a.Toggle(4); a.Toggle(6);
+				b.Toggle(0); b.Toggle(3); b.Toggle(15); b.Toggle(21);
+
+				a |= b;
+				CHECK(a.GetSize() == 26);
+				CHECK(a.GetDynarraySize() == 4);
+				for (size_t i = 0; i < a.GetSize(); i++)
+					if (i == 0 || i == 2 || i == 3 || i == 4 || i == 6 || i == 15 || i == 21)
+						CHECK(a[i] == true);
+					else
+						CHECK(a[i] == false);
+			}
 		}
 	}
 
-	/*
-	//Bitwise XOR assignment operator
+	SECTION("Bitwise AND assignment operator")
 	{
-		BitMask a(7), b(19);
-		a.Toggle(0);	a.Toggle(3);	a.Toggle(6);
-		b.Toggle(0);	b.Toggle(3);	b.Toggle(7);
-		b.Toggle(8);	b.Toggle(13);
-		
-		a ^= b;
-		REQUIRE(a.GetSize() == b.GetSize());
-		for (size_t i = 0; i < a.GetSize(); i++)
+		SECTION("Equal dynarray sizes")
 		{
-			if (i == 6 || i == 7 || i==8 || i==13)
-				CHECK(a[i] == true);
-			else
-				CHECK(a[i] == false);
+			BitMask a(13), b(10);
+			a.Toggle(0); a.Toggle(3); a.Toggle(6); a.Toggle(12); a.Toggle(9);
+			b.Toggle(0); b.Toggle(3); b.Toggle(5); b.Toggle(9);
+			a &= b;
+			CHECK(a.GetDynarraySize() == 2);
+			CHECK(a.GetSize() == 13);
+			for (size_t i = 0; i < a.GetSize(); i++)
+			{
+				if (i==0 || i==3|| i==9)
+					CHECK(a[i] == true);
+				else
+					CHECK(a[i] == false);
+			}
 		}
-	}*/
+		SECTION("Different Dynarray sizes")
+		{
+			SECTION("Rhs dynarray size bigger than lhs size")
+			{
+				BitMask a(4), b(23);
+				a.Toggle(1); a.Toggle(2); a.Toggle(3);
+				b.Toggle(2); b.Toggle(3); b.Toggle(10); b.Toggle(20); b.Toggle(15);
+				a &= b;
+				CHECK(a.GetSize() == 23);
+				CHECK(a.GetDynarraySize() == 3);
+				for (size_t i = 0; i < a.GetSize(); i++)
+					if (i == 2 || i == 3)
+						CHECK(a[i] == true);
+					else
+						CHECK(a[i] == false);
+			}
+			SECTION("Lhs dynarray size bigger than rhs size")
+			{
+				BitMask a(4), b(23);
+				a.Toggle(1); a.Toggle(2); a.Toggle(3);
+				b.Toggle(2); b.Toggle(3); b.Toggle(10); b.Toggle(20); b.Toggle(15);
+				b &= a;
+				CHECK(b.GetSize() == 23);
+				CHECK(b.GetDynarraySize() == 3);
+				for (size_t i = 0; i < b.GetSize(); i++)
+					if (i == 2 || i == 3)
+						CHECK(b[i] == true);
+					else
+						CHECK(b[i] == false);
+			}
+		}
+	}
+	SECTION("Bitwise XOR assignment operator")
+	{
+		SECTION("Same dynarray sizes")
+		{
+			BitMask a(29), b(31);
+			a.Toggle(3); a.Toggle(7); a.Toggle(17); a.Toggle(23); a.Toggle(26);
+			b.Toggle(7); b.Toggle(15); b.Toggle(23); b.Toggle(26); b.Toggle(29);
+			//razem s¹ 7 23 26
+			a ^= b;
+			CHECK(a.GetDynarraySize() == 4);
+			CHECK(a.GetSize() == 31);
+			for (size_t i = 0; i < a.GetSize(); i++)
+				if (i == 3 || i == 15 || i == 17 || i == 3 || i == 29)
+					CHECK(a[i] == true);
+				else
+					CHECK(a[i] == false);
+		}
+		SECTION("Different Dynarray sizes")
+		{
+			SECTION("Rhs dynnaray size bigger than lhs")
+			{
+				BitMask a(8), b(16);
+				a.Toggle(0); a.Toggle(3); a.Toggle(7);
+				b.Toggle(1); b.Toggle(3); b.Toggle(7); b.Toggle(12); b.Toggle(15);
+				a ^= b;
+				//b^=a; ERROR!
+				CHECK(a.GetDynarraySize() == 2);
+				CHECK(a.GetSize() == 16);
+				
+				for (size_t i = 0; i < a.GetSize(); i++)
+					if (i == 0 || i == 1 || i == 12 || i == 15)
+						CHECK(a[i] == true);
+					else
+						CHECK(a[i] == false);
+			}
+			SECTION("Lhs dynnaray size bigger than rhs")
+			{
+				BitMask a(8), b(16);
+				a.Toggle(0); a.Toggle(3); a.Toggle(7);
+				b.Toggle(1); b.Toggle(3); b.Toggle(7); b.Toggle(12); b.Toggle(15);
+				b^=a;
+				CHECK(b.GetDynarraySize() == 2);
+				CHECK(b.GetSize() == 16);
+
+				for (size_t i = 0; i < b.GetSize(); i++)
+					if (i == 0 || i == 1 || i == 12 || i == 15)
+						CHECK(b[i] == true);
+					else
+						CHECK(b[i] == false);
+			}
+		}
+	}
 }
 
 TEST_CASE("Comparision operator", "[BitMask]")
 {
-	BitMask a(5), b(5);
-	a.Toggle(1);	a.Toggle(3);
-	b.Toggle(1);	b.Toggle(3);
-	CHECK(a == b);
-	BitMask c = b;
-	CHECK(c == b);
-	CHECK(c == a);
-	BitMask d(7);
-	CHECK(!(d == a));
-	d.Toggle(1); d.Toggle(3);
-	CHECK(!(d == a));
-	
+	SECTION("Different BitsNumbers")
+	{
+		BitMask a(4), b(5);
+		CHECK_FALSE(a == b);
+	}
+	SECTION("Equal BitsNumbers")
+	{
+		BitMask a(5), b(5);
+		a.Toggle(1);	a.Toggle(3);
+		b.Toggle(1);	b.Toggle(3);
+		CHECK(a == b);
+		BitMask c = b;
+		CHECK(c == b);
+		CHECK(c == a);
+		
+		a.Toggle(2);
+		CHECK_FALSE(a == b);
+		CHECK_FALSE(a == c);
+	}
 }
 
 TEST_CASE("Negation operator", "[BitMask]")
@@ -400,4 +464,5 @@ TEST_CASE("Resize function", "[BitMask]")
 	a.Resize(-1);
 	CHECK(a.GetSize() == 0);
 	CHECK(a.GetDynarraySize() == 0);
+
 }

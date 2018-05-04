@@ -16,12 +16,12 @@ namespace Poly {
 		BitMask operator&(const BitMask& rhs) const;	///Tested
 		BitMask& operator~();							///Tested
 		//Assignment bitwise operators
-		BitMask& operator|=(const BitMask& rhs);		//Done			//Przepisaæ BitsNumbery!!
-		BitMask& operator^=(const BitMask& rhs);		//To be done	//Przepisaæ BitsNumbery!!
-		BitMask& operator&=(const BitMask& rhs);		//Done			//Przepisaæ BitsNumbery!!
+		BitMask& operator|=(const BitMask& rhs);		///Tested
+		BitMask& operator^=(const BitMask& rhs);		///Tested
+		BitMask& operator&=(const BitMask& rhs);		///Tested
 		
 
-		bool operator==(const BitMask rhs) const;	//Done
+		bool operator==(const BitMask rhs) const;	///Tested
 		bool operator!=(const BitMask rhs) const	//Done
 		{ return !(*this == rhs); }
 		bool operator[](size_t index) const;
@@ -31,7 +31,7 @@ namespace Poly {
 		bool Reset();								///Tested
 		bool Toggle(size_t index);					///Tested
 		
-		bool Resize(const int offset = 0);				//
+		bool Resize(const int offset = 0);			///Tested
 
 
 		size_t GetSize() { return BitsNumber; }
