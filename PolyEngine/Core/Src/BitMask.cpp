@@ -1,23 +1,22 @@
 #include "CorePCH.hpp"
 
 #include <climits>
-//#include <cmath>
 
 constexpr u64 ZERO = 0UL;
 
 using namespace Poly;
 
-constexpr BitMask::DataType TYPE_SIZE = CHAR_BIT * sizeof(BitMask::DataType);
+constexpr BitMask::DataType TYPE_BIT = CHAR_BIT * sizeof(BitMask::DataType);
 
 BitMask::BitMask(size_t size)
 	: BitsNumber(size)
 {
 	size_t arraySize = 0;
 	
-	if (size%CHAR_BIT)
-		arraySize = size / CHAR_BIT + 1;
+	if (size%TYPE_BIT)
+		arraySize = size / TYPE_BIT + 1;
 	else 
-		arraySize = size / CHAR_BIT;
+		arraySize = size / TYPE_BIT;
 
 	for (int i = 0; i < arraySize;i++)
 		BitList.PushBack(ZERO);
@@ -33,24 +32,24 @@ bool BitMask::Reset()
 bool BitMask::Toggle(size_t index)
 {
 	HEAVY_ASSERTE(RangeCheck(index), "Out of bounds");
-	BitList[index/CHAR_BIT] ^= 1UL << index%CHAR_BIT;
+	BitList[index/TYPE_BIT] ^= 1UL << index%TYPE_BIT;
 	return true;
 }
 
 bool BitMask::operator[](size_t index) const
 {
-	DataType tempChar = BitList[index/CHAR_BIT];
-	tempChar = (tempChar >> index%CHAR_BIT) & 1UL;
+	DataType tempChar = BitList[index/ TYPE_BIT];
+	tempChar = (tempChar >> index%TYPE_BIT) & 1UL;
 	return tempChar != 0;
 }
 
 bool BitMask::Set(size_t index, bool state)
 {
 	HEAVY_ASSERTE(RangeCheck(index), "Out of bounds");
-	//size_t bitListIndex = BitListIndex(index);
-	size_t bitListIndex	= index / CHAR_BIT;
-	size_t bitPosition	= index % CHAR_BIT;
-	//DataType bit = BitList[index / CHAR_BIT];
+
+	size_t bitListIndex	= index / TYPE_BIT;
+	size_t bitPosition	= index % TYPE_BIT;
+
 	if (state)
 		BitList[bitListIndex] |= (1UL << bitPosition);
 	else
@@ -191,7 +190,7 @@ bool BitMask::Resize(const int offset)
 {
 	if (offset > 0)
 	{
-		if (BitsNumber + offset <= GetDynarraySize()*CHAR_BIT)
+		if (BitsNumber + offset <= GetDynarraySize()*TYPE_BIT)
 		{
 			BitsNumber += offset;
 			return true;
@@ -200,10 +199,10 @@ bool BitMask::Resize(const int offset)
 		{
 			size_t currentSize = BitList.GetSize();
 			size_t targetSize = 0;
-			if ((BitsNumber + offset) % CHAR_BIT)
-				targetSize = (BitsNumber + offset) / CHAR_BIT + 1;
+			if ((BitsNumber + offset) % TYPE_BIT)
+				targetSize = (BitsNumber + offset) / TYPE_BIT + 1;
 			else
-				targetSize = (BitsNumber + offset) / CHAR_BIT;
+				targetSize = (BitsNumber + offset) / TYPE_BIT;
 
 			size_t pushBackCount = targetSize - currentSize;
 
@@ -218,7 +217,7 @@ bool BitMask::Resize(const int offset)
 	if (offset < 0)
 	{
 		HEAVY_ASSERTE(BitsNumber+offset>=0 && BitsNumber+offset<BitsNumber, "Out of bounds");
-		if (BitsNumber + offset > (GetDynarraySize()-1)*CHAR_BIT)
+		if (BitsNumber + offset > (GetDynarraySize()-1)*TYPE_BIT)
 		{
 			BitsNumber += offset;
 			return true;
@@ -227,10 +226,10 @@ bool BitMask::Resize(const int offset)
 		{
 			size_t currentSize = BitList.GetSize();
 			size_t targetSize = 0;
-			if (-1*(BitsNumber+offset) % CHAR_BIT)
-				targetSize = (BitsNumber + offset) / CHAR_BIT+1;
+			if (-1 * (BitsNumber + offset) % TYPE_BIT)
+				targetSize = (BitsNumber + offset) / TYPE_BIT + 1;
 			else
-				targetSize = (BitsNumber + offset) / CHAR_BIT;
+				targetSize = (BitsNumber + offset) / TYPE_BIT;
 			
 			size_t popBackCount = currentSize - targetSize;
 			for (size_t i = 0; i < popBackCount; i++)
@@ -251,7 +250,7 @@ bool BitMask::Resize(const int offset)
 
 size_t BitMask::BitListIndex(size_t index)
 {
-		return index / CHAR_BIT;
+		return index / TYPE_BIT;
 }
 
 BitMask& BitMask::operator|=(const BitMask& rhs)
